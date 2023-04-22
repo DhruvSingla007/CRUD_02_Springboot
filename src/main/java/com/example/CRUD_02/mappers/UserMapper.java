@@ -1,6 +1,7 @@
 package com.example.CRUD_02.mappers;
 
 import com.example.CRUD_02.model.User;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -10,19 +11,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+
+
+@RequiredArgsConstructor
 public class UserMapper implements UserDetails {
 
-    private String username;
-    private String password;
-    private List<GrantedAuthority> roles;
-
-    public UserMapper(User user) {
-        this.username = user.getUsername();
-        this.password = user.getPassword();
-        this.roles = Arrays.stream(user.getRoles().split(","))
-                .map(SimpleGrantedAuthority::new).collect(Collectors.toList());
-
-    }
+    private final String username;
+    private final String password;
+    private final List<GrantedAuthority> roles;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

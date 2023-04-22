@@ -1,18 +1,25 @@
 package com.example.CRUD_02.Config;
 
+import com.example.CRUD_02.filters.JTWAuthFilter;
+import com.example.CRUD_02.repository.UserRepository;
 import com.example.CRUD_02.service.CustomUserDetailService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -22,21 +29,14 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@RequiredArgsConstructor
 public class SpringSecurityConfig {
+
+    private final JTWAuthFilter jtwAuthFilter;
+    private final UserRepository userRepository;
     @Bean
     public UserDetailsService userDetailsService() {
-//        UserDetails userDetails1 = User.withUsername("dhruv")
-//                .password(getPasswordEncoder().encode("dhruv"))
-//                .roles("ADMIN")
-//                .build();
-//
-//        UserDetails userDetails2 = User.withUsername("anushka")
-//                .password(getPasswordEncoder().encode("anushka"))
-//                .roles("USER")
-//                .build();
-
-
-        return new CustomUserDetailService();
+        return new CustomUserDetailService(userRepository);
     }
 
     @Bean
@@ -50,12 +50,16 @@ public class SpringSecurityConfig {
                 .csrf().disable()
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/employee/**").hasRole("ADMIN")
-                        .requestMatchers("/api/employees/**").permitAll()
+                        .requestMatchers("/api/authenticate").permitAll()
+                        .requestMatchers("/api/register").permitAll()
                         .anyRequest().authenticated())
-                .httpBasic(Customizer.withDefaults());
+                .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jtwAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
-        return httpSecurity.formLogin().and().build();
+        return httpSecurity.build();
     }
 
     @Bean
@@ -76,6 +80,11 @@ public class SpringSecurityConfig {
         daoAuthenticationProvider.setUserDetailsService(userDetailsService());
         daoAuthenticationProvider.setPasswordEncoder(getPasswordEncoder());
         return daoAuthenticationProvider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
+        return authenticationConfiguration.getAuthenticationManager();
     }
 
 }
