@@ -1,9 +1,6 @@
 package com.example.CRUD_02.service;
 
-import com.example.CRUD_02.model.AuthRequest;
-import com.example.CRUD_02.model.AuthResponse;
-import com.example.CRUD_02.model.Role;
-import com.example.CRUD_02.model.User;
+import com.example.CRUD_02.model.*;
 import com.example.CRUD_02.repository.UserRepository;
 import com.example.CRUD_02.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -44,24 +42,19 @@ public class AuthenticateServiceImpl implements AuthenticateService {
     }
 
     @Override
-    public AuthResponse registerUser(AuthRequest authRequestDTO) {
+    public ResponseDTO registerUser(AuthRequest authRequestDTO) {
+        UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                .username(authRequestDTO.getUsername())
+                .password(authRequestDTO.getPassword())
+                .roles(Role.USER.toString())
+                .build();
 
-
-        try {
-            var user = org.springframework.security.core.userdetails.User.builder()
-                    .username(authRequestDTO.getUsername())
-                    .password(authRequestDTO.getPassword())
-                    .roles(Role.USER.toString())
-                    .build();
-
-            System.out.println(user);
-            System.out.println(user.getAuthorities());
-//            userRepository.save(user);
-            String jwtToken = jwtUtil.generateToken(user);
-            return AuthResponse.builder().jwtToken(jwtToken).build();
-        } catch (Exception ex){
-            ex.printStackTrace();
+        User user = new User(userDetails.getUsername(), userDetails.getPassword(), Role.USER);
+        // Check if the username exists or not
+        if(userRepository.findUserByUsername(authRequestDTO.getUsername()).isPresent()){
+            return ResponseDTO.builder().message("Username already exists.").build();
         }
-        return null;
+        userRepository.save(user);
+        return ResponseDTO.builder().message("User Successfully created.").build();
     }
 }

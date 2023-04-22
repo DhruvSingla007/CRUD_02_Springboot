@@ -1,28 +1,23 @@
 package com.example.CRUD_02.mappers;
 
-import com.example.CRUD_02.model.User;
+import com.example.CRUD_02.model.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-
-
 
 @RequiredArgsConstructor
 public class UserMapper implements UserDetails {
 
     private final String username;
     private final String password;
-    private final List<GrantedAuthority> roles;
+    private final Role role;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return this.roles;
+        return List.of(new SimpleGrantedAuthority(role.name()));
     }
 
     @Override

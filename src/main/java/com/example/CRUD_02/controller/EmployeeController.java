@@ -3,6 +3,7 @@ package com.example.CRUD_02.controller;
 import com.example.CRUD_02.model.AuthRequest;
 import com.example.CRUD_02.model.AuthResponse;
 import com.example.CRUD_02.model.Employee;
+import com.example.CRUD_02.model.ResponseDTO;
 import com.example.CRUD_02.service.AuthenticateService;
 import com.example.CRUD_02.service.EmployeeService;
 import lombok.NonNull;
@@ -28,15 +29,15 @@ public class EmployeeController {
 
 
     @PostMapping(value = "/api/register", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<AuthResponse> registerUser(@RequestBody @NonNull AuthRequest authRequestDTO) {
+    public ResponseEntity<ResponseDTO> registerUser(@RequestBody @NonNull AuthRequest authRequestDTO) {
         System.out.println("Reached");
-        AuthResponse authResponseDTO = null;
+        ResponseDTO responseDTO = new ResponseDTO();
         try {
-            authResponseDTO = authenticateService.registerUser(authRequestDTO);
+            responseDTO = authenticateService.registerUser(authRequestDTO);
         } catch (Exception ex){
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(authResponseDTO, HttpStatus.OK);
+        return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/authenticate", consumes = "application/json", produces = "application/json")
