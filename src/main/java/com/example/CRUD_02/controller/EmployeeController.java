@@ -10,6 +10,7 @@ import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +24,7 @@ public class EmployeeController {
     private final AuthenticateService authenticateService;
 
     @GetMapping("/")
-    public String welcome(){
+    public String welcome() {
         return "welcome";
     }
 
@@ -34,20 +35,20 @@ public class EmployeeController {
         ResponseDTO responseDTO = new ResponseDTO();
         try {
             responseDTO = authenticateService.registerUser(authRequestDTO);
-        } catch (Exception ex){
+        } catch (Exception ex) {
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>(responseDTO, HttpStatus.OK);
     }
 
     @PostMapping(value = "/api/authenticate", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody @NonNull AuthRequest authRequestDTO) {
+    public ResponseEntity<AuthResponse> authenticateUser(@RequestBody @NonNull AuthRequest authRequestDTO) throws Exception {
         System.out.println("Reached");
         AuthResponse authResponseDTO = null;
         try {
             authResponseDTO = authenticateService.authenticateUser(authRequestDTO);
         } catch (Exception ex){
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+            System.out.println(ex.getMessage());
         }
         return new ResponseEntity<>(authResponseDTO, HttpStatus.OK);
     }
@@ -62,8 +63,9 @@ public class EmployeeController {
         return employeeService.createEmployee(employee);
     }
 
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping("/api/employee/{id}")
-    public ResponseEntity<Employee> getEmployeeById(@PathVariable("id") Long id){
+    public ResponseEntity<Employee> getEmployeeById(@PathVariable("id") Long id) {
         Employee employee = employeeService.getEmployeeById(id);
         return ResponseEntity.ok(employee);
     }
@@ -74,7 +76,7 @@ public class EmployeeController {
     }
 
     @DeleteMapping("/api/deleteEmployee/{id}")
-    public ResponseEntity<Boolean> deleteEmployeeById(@PathVariable("id") Long id){
+    public ResponseEntity<Boolean> deleteEmployeeById(@PathVariable("id") Long id) {
         employeeService.deleteEmployee(id);
         return ResponseEntity.ok(true);
     }

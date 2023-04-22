@@ -33,12 +33,15 @@ public class AuthenticateServiceImpl implements AuthenticateService {
                             authRequest.getPassword()
                     ));
         } catch (BadCredentialsException ex) {
-            throw new Exception("Incorrect username or password", ex);
+            return AuthResponse.builder().message(ex.getMessage()).build();
         }
 
         User user = userRepository.findUserByUsername(authRequest.getUsername()).orElseThrow();
         final String jwtToken = jwtUtil.generateToken(user);
-        return AuthResponse.builder().jwtToken(jwtToken).build();
+        return AuthResponse.builder()
+                .jwtToken(jwtToken)
+                .message("User authenticated successfully")
+                .build();
     }
 
     @Override
